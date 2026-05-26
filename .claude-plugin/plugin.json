@@ -1,0 +1,13 @@
+{
+  "name": "workflow",
+  "displayName": "Workflow Engineering",
+  "description": "Workflow engineering skills for Claude Code — git discipline, CI/CD automation, code review governance, and Linear integration.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Anton Babushkin"
+  },
+  "homepage": "https://github.com/ababushkin/agent-skills-workflow",
+  "repository": "https://github.com/ababushkin/agent-skills-workflow",
+  "license": "MIT",
+  "hooks": "./hooks/hooks.json"
+}
