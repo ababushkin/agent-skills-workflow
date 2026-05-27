@@ -1,0 +1,15 @@
+{
+  "name": "agent-skills-workflow",
+  "owner": {
+    "name": "Anton Babushkin"
+  },
+  "description": "Workflow engineering skills for Claude Code teams.",
+  "plugins": [
+    {
+      "name": "workflow",
+      "source": "./",
+      "description": "Git discipline, CI/CD automation, code review governance, and Linear integration.",
+      "homepage": "https://github.com/ababushkin/agent-skills-workflow"
+    }
+  ]
+}
