@@ -1,4 +1,4 @@
 .DS_Store
-.claude
+.claude/settings.json.local
 .entire
 .claude-plugin
