@@ -1,6 +1,6 @@
 # Linear workflow — initiative model
 
-This document is the canonical governance model for how work is tracked in Linear when using the agent-skills-workflow pack. It applies to any repo in the workspace that loads this pack.
+This document is the canonical governance model for how work is tracked in Linear when using the workflow-hooks pack. It applies to any repo in the workspace that loads this pack.
 
 > **Cross-pack note:** The six-field initiative shape definition and the `/initiative-shape` skill are canonical in the Shaper pack. If the Shaper pack is installed alongside this one, defer to Shaper for initiative authoring and use this document for the tracker mechanics (cycle model, issue workflow, project conventions). If Shaper is not installed, use the inline fallback in the [Capturing a shaped initiative in Linear](#capturing-a-shaped-initiative-in-linear) section below.
 

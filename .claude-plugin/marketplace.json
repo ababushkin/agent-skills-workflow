@@ -1,15 +1,15 @@
 {
-  "name": "agent-skills-workflow",
+  "name": "workflow-hooks",
   "owner": {
     "name": "Anton Babushkin"
   },
-  "description": "Workflow engineering skills for Claude Code teams.",
+  "description": "Hook-injected workflow governance for Claude Code teams.",
   "plugins": [
     {
-      "name": "workflow",
+      "name": "workflow-hooks",
       "source": "./",
-      "description": "Git discipline, CI/CD automation, code review governance, and Linear integration.",
-      "homepage": "https://github.com/ababushkin/agent-skills-workflow"
+      "description": "Code review gate, Linear lifecycle, and delivery-issue adapter — delivered via SessionStart hook.",
+      "homepage": "https://github.com/ababushkin/workflow-hooks"
     }
   ]
 }

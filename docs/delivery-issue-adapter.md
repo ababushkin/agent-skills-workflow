@@ -1,6 +1,6 @@
 # Delivery-issue adapter — on-pickup surfacing
 
-The agent-skills-workflow pack is the tracker-binding adapter for delivery
+The workflow-hooks pack is the tracker-binding adapter for delivery
 plans authored under the agent-skills-shaper contract
 (`docs/delivery-shape-contract.md` in that repo). The contract is
 tool-agnostic by rule and names no tracker; the binding lives here.
