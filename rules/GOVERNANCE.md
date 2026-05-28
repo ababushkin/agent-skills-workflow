@@ -47,6 +47,7 @@ nothing of value remains. Leave alone: sample-data IDs in tests, schema placehol
 - On completion, after the gate: post a review-summary comment on the issue, then transition
   it to Done.
 Read `rules/linear-workflow.md` for the full cycle / backlog / capture / issue-workflow rubric.
+Read `rules/graphite-stack-review.md` for the runbook on handling reviewer comments across a Graphite-stacked PR series.
 
 ## Shaper pack — read when installed
 
