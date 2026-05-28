@@ -52,32 +52,6 @@ claude plugin marketplace update agent-skills-workflow
 
 Auto-update is supported — users can enable it via the `/plugin` → Marketplaces tab to receive updates automatically at session start.
 
-## Directory layout
-
-```
-.claude-plugin/
-  plugin.json       ← plugin manifest (name, version, description)
-  marketplace.json  ← marketplace catalog (lists this plugin)
-rules/              ← governance rule files loaded via CLAUDE.md
-skills/             ← skill directories, each containing SKILL.md
-hooks/
-  hooks.json        ← event hooks (PostToolUse, Stop, etc.)
-```
-
-## Framework contracts (verified against code.claude.com/docs)
-
-| Contract | Value | Source |
-|---|---|---|
-| Manifest location | `.claude-plugin/plugin.json` | [/en/plugins#quickstart](https://code.claude.com/docs/en/plugins#quickstart) |
-| Manifest required fields | `name` only | [/en/plugins-reference#required-fields](https://code.claude.com/docs/en/plugins-reference#required-fields) |
-| Marketplace location | `.claude-plugin/marketplace.json` | [/en/plugin-marketplaces#create-the-marketplace-file](https://code.claude.com/docs/en/plugin-marketplaces#create-the-marketplace-file) |
-| Marketplace required fields | `name`, `owner.name`, `plugins[].name`, `plugins[].source` | [/en/plugin-marketplaces#marketplace-schema](https://code.claude.com/docs/en/plugin-marketplaces#marketplace-schema) |
-| Add marketplace CLI | `/plugin marketplace add owner/repo` | [/en/discover-plugins#add-from-github](https://code.claude.com/docs/en/discover-plugins#add-from-github) |
-| Install plugin CLI | `/plugin install name@marketplace` | [/en/discover-plugins#install-plugins](https://code.claude.com/docs/en/discover-plugins#install-plugins) |
-| Update marketplace CLI | `/plugin marketplace update marketplace-name` | [/en/discover-plugins#manage-marketplaces](https://code.claude.com/docs/en/discover-plugins#manage-marketplaces) |
-| Plugin-root variable | `${CLAUDE_PLUGIN_ROOT}` | [/en/plugins-reference#hooks](https://code.claude.com/docs/en/plugins-reference#hooks) |
-| Component directories | `skills/`, `hooks/`, `agents/` at plugin root (not inside `.claude-plugin/`) | [/en/plugins#plugin-structure-overview](https://code.claude.com/docs/en/plugins#plugin-structure-overview) |
-
 ## License
 
 MIT
