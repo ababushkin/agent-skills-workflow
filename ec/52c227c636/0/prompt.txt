@@ -1,0 +1,34 @@
+the installation instructions seem a bit odd in this repo
+there are no actual "skills" per say
+
+review how this project is configured considering what it's used for
+
+---
+
+yes - this is a complimentary set of hooks - i think we should also consider changing the name of the project but lets think about that after this first change
+
+---
+
+i'm thinking it should more about hooks - what do you think
+
+---
+
+lets plan the whole change in including renaming the repo
+but you should give me a migration guide for those who have installed it already
+
+---
+
+so how does this actually work? i looked in the hooks directory and it's pretty shallow
+just trying to figure out how these rules are injected into the workflow when ever an agent is running..
+
+---
+
+is the way the linear reference setup correct? as in - will it load that file and know where to find it?
+
+---
+
+well we should stick with option B for now and i'll see if it works correctly or not
+
+---
+
+and will this work ok with all the caching stuff claude code does
