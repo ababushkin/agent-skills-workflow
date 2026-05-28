@@ -1,0 +1,193 @@
+#!/usr/bin/env python3
+"""render-delivery-issues — render a walk-delivery-plan manifest into issue bodies.
+
+Consumes the JSON manifest emitted by `walk-delivery-plan --json` (from the
+agent-skills-shaper pack), and writes one markdown file per issue into an
+output directory. Each emitted issue carries an `▶ On pickup` instruction
+that surfaces the node's `delegates_to` — the discipline the picking-up agent
+must invoke before writing code.
+
+This is the obligation the producer contract (`docs/delivery-shape-contract.md`
+§ *Delegation — timing & surfacing* in the shaper repo) places on every
+tracker-binding adapter: `delegates_to` fires at build-time, not at plan
+emission, so the surfacing must reach the picked-up issue.
+
+A `ktlo` node still gets the line — it just states "no task-breakdown step"
+(roadmap A5 carve-out). Non-ktlo issues that lack the line are caught by the
+companion `check-rendered-issues`.
+
+Usage:
+    bin/render-delivery-issues <manifest.json | -> --out <dir>
+
+Reading `-` consumes the manifest from stdin (so it composes with a pipe
+from `walk-delivery-plan ... --json`).
+
+Exit codes:
+    0   rendered cleanly
+    2   the manifest is missing a required key on a node (delegates_to, type, id)
+    64  usage error
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import sys
+from pathlib import Path
+
+ON_PICKUP_MARK = "▶ On pickup"
+
+
+class RenderError(Exception):
+    """The manifest does not carry the keys the adapter needs."""
+
+
+def parse_delegate(value: str) -> tuple[str, str | None]:
+    """Split a `delegates_to` string into bare skill name and parenthetical purpose.
+
+    The contract pins `delegates_to` to "<rule or skill that owns this node
+    type's discipline>", with a parenthetical describing *why* it owns this
+    node — e.g. "planning-and-task-breakdown (per-node task breakdown)".
+    """
+    m = re.match(r"^([^(]+?)\s*\((.+)\)\s*$", value.strip())
+    if m:
+        return m.group(1).strip(), m.group(2).strip()
+    return value.strip(), None
+
+
+def on_pickup_line(node_type: str, delegates_to: str) -> str:
+    if node_type == "ktlo":
+        return (
+            f"> **{ON_PICKUP_MARK}:** KTLO housekeeping — no task-breakdown step "
+            f"(ops slot carve-out; roadmap A5)."
+        )
+    skill, purpose = parse_delegate(delegates_to)
+    tail = f" ({purpose})" if purpose else ""
+    return (
+        f"> **{ON_PICKUP_MARK} — before writing code:** invoke "
+        f"`{skill}`{tail} to expand this node before building."
+    )
+
+
+def render_issue(milestone: dict, issue: dict) -> str:
+    out: list[str] = []
+    out.append("---")
+    out.append(f"id: {issue['id']}")
+    out.append(f"deliverable_id: {milestone['id']}")
+    out.append(f"type: {issue['type']}")
+    out.append(f"serves_kr: {issue['serves_kr']}")
+    out.append(f"delegates_to: {issue['delegates_to']}")
+    if issue.get("skeleton"):
+        out.append("skeleton: true")
+    out.append("---")
+    out.append("")
+    out.append(f"# {issue['id']} — {issue['title']}")
+    out.append("")
+    out.append(on_pickup_line(issue["type"], issue["delegates_to"]))
+    out.append("")
+    out.append(f"**Serves:** {milestone['id']} → {issue['serves_kr']}")
+    out.append("")
+    out.append(f"**Completion form:** {issue['completion_form']}")
+    out.append("")
+    if issue["sub_issues"]:
+        out.append("## Tasks")
+        out.append("")
+        for t in issue["sub_issues"]:
+            box = "x" if t["done"] else " "
+            tag = "`skeleton` — " if t["skeleton"] else ""
+            out.append(f"- [{box}] {tag}{t['text']}")
+        out.append("")
+    out.append(f"**Source:** `{issue['path']}`")
+    out.append("")
+    return "\n".join(out)
+
+
+def slug_from_path(path: str) -> str:
+    name = Path(path).stem  # e.g. "N04-decompose-with-acceptance-criteria"
+    m = re.match(r"^N\d+-(.+)$", name)
+    return m.group(1) if m else name
+
+
+SAFE_ID_RE = re.compile(r"^[DN]\d+$")
+
+
+def filename_for(milestone: dict, issue: dict) -> str:
+    return f"{milestone['id']}-{issue['id']}-{slug_from_path(issue['path'])}.md"
+
+
+def require_key(d: dict, key: str, label: str) -> None:
+    if key not in d or d[key] in (None, ""):
+        raise RenderError(f"{label}: manifest entry missing required '{key}'")
+
+
+def require_safe_id(value: str, label: str) -> None:
+    # The id flows into an output filename; the adapter is the trust boundary
+    # between an untrusted manifest and the filesystem. Refuse anything other
+    # than the contract's D<n> / N<n> identifier shape.
+    if not SAFE_ID_RE.match(value):
+        raise RenderError(f"{label}: unsafe id {value!r} (expected D<n> or N<n>)")
+
+
+def render_all(manifest: dict, out_dir: Path) -> list[Path]:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    written: list[Path] = []
+    for milestone in manifest.get("milestones", []):
+        for key in ("id", "serves_kr"):
+            require_key(milestone, key, "milestone")
+        require_safe_id(milestone["id"], "milestone id")
+        for issue in milestone.get("issues", []):
+            label = f"issue under {milestone['id']}"
+            for key in ("id", "type", "delegates_to", "path",
+                        "title", "serves_kr", "completion_form"):
+                require_key(issue, key, label)
+            require_safe_id(issue["id"], f"{label} id")
+            body = render_issue(milestone, issue)
+            path = out_dir / filename_for(milestone, issue)
+            path.write_text(body, encoding="utf-8")
+            written.append(path)
+    return written
+
+
+def main(argv: list[str]) -> int:
+    args = argv[1:]
+    out_dir: Path | None = None
+    positional: list[str] = []
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "--out":
+            i += 1
+            if i >= len(args):
+                sys.stderr.write("usage: render-delivery-issues <manifest|-> --out <dir>\n")
+                return 64
+            out_dir = Path(args[i])
+        else:
+            positional.append(a)
+        i += 1
+
+    if len(positional) != 1 or out_dir is None:
+        sys.stderr.write("usage: render-delivery-issues <manifest|-> --out <dir>\n")
+        return 64
+
+    src = positional[0]
+    try:
+        if src == "-":
+            manifest = json.load(sys.stdin)
+        else:
+            manifest = json.loads(Path(src).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        sys.stderr.write(f"PARSE ERROR: cannot read manifest from {src}: {exc}\n")
+        return 2
+
+    try:
+        written = render_all(manifest, out_dir)
+    except RenderError as exc:
+        sys.stderr.write(f"PARSE ERROR: {exc}\n")
+        return 2
+
+    sys.stderr.write(f"rendered {len(written)} issue(s) into {out_dir}\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))

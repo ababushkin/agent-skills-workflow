@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""check-rendered-issues — fail loudly if a non-ktlo issue lacks the on-pickup line.
+
+Companion to `render-delivery-issues`. Walks an output directory of rendered
+issue bodies, reads each file's front-matter for the node `type`, and confirms
+that every non-`ktlo` issue carries the `▶ On pickup` marker in its body.
+A missing marker means the adapter (or a hand-edit downstream of it) stripped
+the build-time delegation surfacing — the consumer rule in
+`rules/linear-workflow.md` § *On start* depends on this line reaching the
+picked-up issue.
+
+Usage:
+    bin/check-rendered-issues <dir>
+
+Exit codes:
+    0   every non-ktlo rendered issue carries the on-pickup line
+    2   one or more non-ktlo issues are missing it (paths listed on stderr)
+    64  usage error
+"""
+
+from __future__ import annotations
+
+import re
+import sys
+from pathlib import Path
+
+ON_PICKUP_MARK = "▶ On pickup"
+TYPE_RE = re.compile(r"^type:\s*(\S+)\s*$")
+
+
+def read_type(body: str) -> str | None:
+    """Read the `type` key from the front-matter at the top of an issue body."""
+    lines = body.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None
+    for line in lines[1:]:
+        if line.strip() == "---":
+            return None
+        m = TYPE_RE.match(line)
+        if m:
+            return m.group(1)
+    return None
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) != 2:
+        sys.stderr.write("usage: check-rendered-issues <dir>\n")
+        return 64
+    root = Path(argv[1])
+    if not root.is_dir():
+        sys.stderr.write(f"error: {root} is not a directory\n")
+        return 64
+
+    files = sorted(root.glob("*.md"))
+    if not files:
+        sys.stderr.write(f"error: no rendered issue files (*.md) in {root}\n")
+        return 64
+
+    missing: list[Path] = []
+    untyped: list[Path] = []
+    for path in files:
+        try:
+            body = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            sys.stderr.write(f"error: cannot read {path}: {exc}\n")
+            return 64
+        node_type = read_type(body)
+        if node_type is None:
+            untyped.append(path)
+            continue
+        if node_type == "ktlo":
+            continue
+        if ON_PICKUP_MARK not in body:
+            missing.append(path)
+
+    if untyped:
+        for p in untyped:
+            sys.stderr.write(f"NO TYPE: {p} (front-matter missing `type:`)\n")
+    if missing:
+        for p in missing:
+            sys.stderr.write(
+                f"MISSING ON-PICKUP: {p} (non-ktlo issue without `{ON_PICKUP_MARK}` line)\n"
+            )
+        sys.stderr.write(
+            f"\n{len(missing)} non-ktlo issue(s) missing the on-pickup line. "
+            "The adapter (or a downstream edit) stripped the build-time "
+            "delegation surfacing the consumer rule requires.\n"
+        )
+        return 2
+    if untyped:
+        return 2
+
+    sys.stderr.write(
+        f"ok: {len(files)} rendered issue(s) checked; every non-ktlo issue "
+        f"carries the `{ON_PICKUP_MARK}` line.\n"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))
