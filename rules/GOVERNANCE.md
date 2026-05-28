@@ -26,7 +26,15 @@ commit SHAs, PR numbers, or fix-history narration ("added for…", "fixes the bu
 or `docs/design-decisions.md`. Fixing an offending comment: strip the reference and keep the
 explanatory prose; reword if the label was the grammatical subject; delete the comment if
 nothing of value remains. Leave alone: sample-data IDs in tests, schema placeholders
-(`"issue_identifier": "ABA-NNN"`), and references to in-repo docs (`README §1`).
+(`"issue_identifier": "ABA-NNN"`), and in-repo file paths (`README.md`).
+
+- **Comment-as-smell.** If the only justification for a special-case branch or constant is a
+  multi-line explanatory comment, prefer deleting the special case. A comment that explains
+  *why this hack is needed* signals the design is wrong; remove the hack and the comment
+  together.
+- **No README §N refs in code.** Code comments must not point at README section numbers — the
+  two artefacts evolve independently and the reference rots silently. References to other
+  in-repo files by path are fine; section numbers are not.
 
 ## Linear lifecycle — always on
 
