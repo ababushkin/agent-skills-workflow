@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.6.3",
+  "checkpoint_id": "05df472e41dd",
+  "strategy": "manual-commit",
+  "branch": "ABA-305",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".claude-plugin/plugin.json",
+    "rules/GOVERNANCE.md",
+    "rules/graphite-stack-review.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/05/df472e41dd/0/metadata.json",
+      "transcript": "/05/df472e41dd/0/full.jsonl",
+      "content_hash": "/05/df472e41dd/0/content_hash.txt",
+      "prompt": "/05/df472e41dd/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 19,
+    "cache_creation_tokens": 30494,
+    "cache_read_tokens": 580551,
+    "output_tokens": 5352,
+    "api_call_count": 16
+  }
+}
