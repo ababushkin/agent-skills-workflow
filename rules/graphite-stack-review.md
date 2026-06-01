@@ -52,7 +52,7 @@ gt restack
 
 `gt restack` walks the stack from the amended layer upward, rebasing each higher layer onto the new parent SHA. Every branch in the stack will point at the correct, amended history when it completes.
 
-If restack reports a conflict, resolve it in the working tree, run `git add <resolved-files>`, then `gt restack --continue`.
+A restack conflict is a **stop-the-line**. Abort with `git rebase --abort` (`gt abort` refuses in non-interactive mode — use the `git` form), leave the stack on its pre-restack history, and surface the conflict for a human. Never auto-resolve and `--continue` — a restack conflict is a semantic decision a reviewer-comment fix must not make silently.
 
 ---
 
